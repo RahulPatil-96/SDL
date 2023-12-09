@@ -1,0 +1,10 @@
+z=[10,20,30,40,50]
+print(z[0])
+print(z[0:2])
+z.index(30)
+z.sort
+print(z)
+z.append(3)
+print(z)
+z.remove(20)
+print(z)
