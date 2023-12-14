@@ -32,48 +32,40 @@ class ExpenseTracker:
 
         self.time_label = ttk.Label(self.root, text="Time:")
         self.time_entry = ttk.Entry(self.root)
-        self.time_entry.insert(0, datetime.now().strftime("%H:%M"))  # Set initial time to current time
+        self.time_entry.insert(0, datetime.now().strftime("%H:%M"))
 
         self.category_label = ttk.Label(self.root, text="Category:")
         self.category_combobox = ttk.Combobox(self.root, values=self.categories)
 
         self.currency_label = ttk.Label(self.root, text="Currency:")
-        self.currency_combobox = ttk.Combobox(self.root, values=["INR","USD", "EUR", "GBP", "JPY"], textvariable=self.selected_currency)
+        self.currency_combobox = ttk.Combobox(self.root, values=["INR", "USD", "EUR", "GBP", "JPY"], textvariable=self.selected_currency)
 
         self.add_button = ttk.Button(self.root, text="Add Expense", command=self.add_expense)
         self.total_button = ttk.Button(self.root, text="Show Total Expense", command=self.show_total_expense)
 
-        self.tree = ttk.Treeview(self.root, columns=('Amount', 'Description', 'Date', 'Time', 'Category', 'Currency'))
-        self.tree.heading('#0', text='ID')
-        self.tree.heading('#1', text='Amount')
-        self.tree.heading('#2', text='Description')
-        self.tree.heading('#3', text='Date')
-        self.tree.heading('#4', text='Time')
-        self.tree.heading('#5', text='Category')
-        self.tree.heading('#6', text='Currency')
+        columns = ('Amount', 'Description', 'Date', 'Time', 'Category', 'Currency')
+        self.tree = ttk.Treeview(self.root, columns=columns)
+        for i, col in enumerate(columns):
+            self.tree.heading(f'#{i}', text=col)
+        self.tree.column('#0', stretch=tk.NO, width=0)  # Hide ID column
 
         self.total_label = ttk.Label(self.root, text="Total Expenses: 0.00", font=('Helvetica', 12, 'bold'))
 
-        self.amount_label.grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
-        self.amount_entry.grid(row=0, column=1, padx=5, pady=5, sticky=tk.W)
-
-        self.description_label.grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
-        self.description_entry.grid(row=1, column=1, padx=5, pady=5, sticky=tk.W)
-
-        self.date_label.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
-        self.date_entry.grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
-
-        self.time_label.grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
-        self.time_entry.grid(row=3, column=1, padx=5, pady=5, sticky=tk.W)
-
-        self.category_label.grid(row=4, column=0, padx=5, pady=5, sticky=tk.W)
-        self.category_combobox.grid(row=4, column=1, padx=5, pady=5, sticky=tk.W)
-
-        self.currency_label.grid(row=5, column=0, padx=5, pady=5, sticky=tk.W)
-        self.currency_combobox.grid(row=5, column=1, padx=5, pady=5, sticky=tk.W)
-
         self.limit_label.grid(row=6, column=0, padx=5, pady=5, sticky=tk.W)
         self.limit_entry.grid(row=6, column=1, padx=5, pady=5, sticky=tk.W)
+
+        widgets = [
+            (self.amount_label, self.amount_entry),
+            (self.description_label, self.description_entry),
+            (self.date_label, self.date_entry),
+            (self.time_label, self.time_entry),
+            (self.category_label, self.category_combobox),
+            (self.currency_label, self.currency_combobox),
+        ]
+
+        for i, (label, entry) in enumerate(widgets, start=1):
+            label.grid(row=i, column=0, padx=5, pady=5, sticky=tk.W)
+            entry.grid(row=i, column=1, padx=5, pady=5, sticky=tk.W)
 
         self.add_button.grid(row=7, column=0, pady=10)
         self.total_button.grid(row=7, column=1, pady=10)
@@ -110,12 +102,29 @@ class ExpenseTracker:
         total_expenses = sum(exp[0] for exp in self.expenses)
         self.total_label.config(text=f"Total Expenses: {self.selected_currency.get()} {total_expenses:.2f}")
 
+        self.write_to_file()  # Update the file when showing total expenses
+
     def check_limit_exceeded(self, limit):
         total_expenses = sum(exp[0] for exp in self.expenses)
         return total_expenses > limit
 
     def play_limit_exceeded_sound(self):
         winsound.Beep(int(round(1000)), int(round(1000)))
+
+    def write_to_file(self, filename="expenses.txt"):
+        with open(filename, 'w') as file:
+            file.write("Expense Details:\n")
+            for index, expense in enumerate(self.expenses, start=1):
+                file.write(f"\nExpense {index}:\n")
+                file.write(f"Amount: {expense[0]} {expense[5]}\n")
+                file.write(f"Description: {expense[1]}\n")
+                file.write(f"Date: {expense[2]}\n")
+                file.write(f"Time: {expense[3]}\n")
+                file.write(f"Category: {expense[4]}\n")
+
+            total_expenses = sum(exp[0] for exp in self.expenses)
+            file.write("\nTotal Expenses:\n")
+            file.write(f"Total: {self.selected_currency.get()} {total_expenses:.2f}\n")
 
 if __name__ == "__main__":
     root = tk.Tk()
